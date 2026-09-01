@@ -1,13 +1,14 @@
-import sys
+import sys, time
+
 from pathlib import Path
-import time
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from transformers import AutoTokenizer
 from ingestion.secIngestion import SECIngestor
-tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-small-en-v1.5")
+niche = "BAAI/bge-small-en-v1.5"
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
 def chunk_text(text, size=400, overlap=50):
     '''Splits text into chunks to be tokenised with overlaps'''
