@@ -8,9 +8,9 @@ class SECIngestor:
         self.ticker = ticker.upper()
         self.company = et.Company(self.ticker)
 
-    def _get_latest_10q(self):
-        filings = self.company.get_filings(form="10-Q")
-        return filings.latest()
+    def _get_filings(self, forms=["10-K", "10-Q"], limit=35):
+        filings = self.company.get_filings(form=forms, amendments=False)
+        return filings[:limit]
 
     def _clean_section(self, section):
         if section is None:
@@ -24,17 +24,22 @@ class SECIngestor:
 
         return "\n".join(lines)
 
-    def retrieve_filing(self):
-        filing = self._get_latest_10q()
-        ten_q = filing.obj()
+    def retrieve_filing(self, limit=35):
+        filings = self._get_filings(limit=limit)
+        results = []
+        for filing in filings:
+            filing_obj = filing.obj()
 
-        mda = ten_q.get_item_with_part("Part I", "Item 2")
-        risk_factors = ten_q.get_item_with_part(
-            "Part II",
-            "Item 1A"
-        )
+            if filing.form == "10-Q":
+                mda = filing_obj.get_item_with_part("Part I", "Item 2")
+                risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
+            elif filing.form == "10-K":
+                mda = filing_obj.get_item_with_part("Part II", "Item 7")
+                risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
+            else:
+                continue
 
-        return {
+            results.append({
             "ticker": self.ticker,
             "company_name": self.company.name,
             "cik": self.company.cik,
@@ -44,6 +49,10 @@ class SECIngestor:
             "source_url": filing.url,
             "sections": {
                 "mda": self._clean_section(mda),
-                "risk_factors": self._clean_section(risk_factors),
+                "risk_factors": self._clean_section(
+                    risk_factors
+                ),
             },
-        }
+        })
+
+        return results
