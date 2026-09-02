@@ -57,16 +57,6 @@ def build_chunks(filing_data):
 
     return records
 
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     f = 0
     while f != 2:
