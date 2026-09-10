@@ -9,10 +9,11 @@ from transformers import AutoTokenizer
 from ingestion.secIngestion import SECIngestor
 niche = "BAAI/bge-small-en-v1.5"
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
+tokenizer.model_max_length = 10**9
 
 def chunk_text(text, size=400, overlap=50):
     '''Splits text into chunks to be tokenised with overlaps'''
-    tokens = tokenizer.encode(text, add_special_tokens=False)
+    tokens = tokenizer.encode(text, add_special_tokens=False, truncation=False)
     chunks = []
     start = 0
 
@@ -40,6 +41,9 @@ def build_chunks(filing_data):
     for filings in filing_data:
         for section_name, section_text in filings["sections"].items():
             chunks = chunk_text(section_text)
+
+            if len(chunks) == 0:
+                continue
             for i, chunk in enumerate(chunks):
                 record = {
                     "ticker": filings["ticker"],
@@ -50,9 +54,10 @@ def build_chunks(filing_data):
                     "accession_number": filings["accession_number"],
                     "source_url": filings["source_url"],
                     "section_name": section_name,
-                    "chunk_id": i,
+                    "chunk_index": i,
                     "chunk_text": chunk,
                 }
+        
             records.append(record)
 
     return records
@@ -79,5 +84,9 @@ if __name__ == "__main__":
             print(f"Number of chunks: {len(records)}")
         elif f == 2:
             break
+        elif f == 3:
+            r = input("type whatever u want:")
+            chunks = chunk_text(r, size=10, overlap=5)
+            print(chunks)
 
     sys.exit()

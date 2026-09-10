@@ -28,31 +28,48 @@ class SECIngestor:
         filings = self._get_filings(limit=limit)
         results = []
         for filing in filings:
-            filing_obj = filing.obj()
+            try:
+                print(
+                    "Processing: ",
+                    self.ticker,
+                    filing.form,
+                    filing.filing_date,
+                    filing.accession_no
+                )
+                if filing.homepage.primary_html_document is None:
+                    print(f"Skipping {filing.accession_no} due to missing primary HTML document.")
+                    continue
+                filing_obj = filing.obj()
 
-            if filing.form == "10-Q":
-                mda = filing_obj.get_item_with_part("Part I", "Item 2")
-                risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
-            elif filing.form == "10-K":
-                mda = filing_obj.get_item_with_part("Part II", "Item 7")
-                risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
-            else:
-                continue
+                if filing.form == "10-Q":
+                    mda = filing_obj.get_item_with_part("Part I", "Item 2")
+                    risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
+                elif filing.form == "10-K":
+                    mda = filing_obj.get_item_with_part("Part II", "Item 7")
+                    risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
+                else:
+                    continue
 
-            results.append({
-            "ticker": self.ticker,
-            "company_name": self.company.name,
-            "cik": self.company.cik,
-            "filing_type": filing.form,
-            "filing_date": filing.filing_date,
-            "accession_number": filing.accession_no,
-            "source_url": filing.url,
-            "sections": {
-                "mda": self._clean_section(mda),
-                "risk_factors": self._clean_section(
-                    risk_factors
-                ),
-            },
-        })
-
+                results.append({
+                "ticker": self.ticker,
+                "company_name": self.company.name,
+                "cik": self.company.cik,
+                "filing_type": filing.form,
+                "filing_date": filing.filing_date,
+                "accession_number": filing.accession_no,
+                "source_url": filing.url,
+                "sections": {
+                    "mda": self._clean_section(mda),
+                    "risk_factors": self._clean_section(
+                        risk_factors
+                    ),
+                },
+            })
+            except Exception as e:
+                print(
+                    f"Skipping {filing.accession_no}: "
+                    f"{type(e).__name__}: {e}"
+                )
+            continue
+        
         return results
