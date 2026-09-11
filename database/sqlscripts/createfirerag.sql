@@ -1,0 +1,5 @@
+CREATE DATABASE fire_rag;
+
+CREATE USER fire_user WITH PASSWORD 'zeke06';
+
+GRANT ALL PRIVILEGES ON DATABASE fire_rag TO fire_user;

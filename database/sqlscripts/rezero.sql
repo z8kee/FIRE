@@ -1,0 +1,3 @@
+TRUNCATE TABLE chunks, documents, companies
+RESTART IDENTITY
+CASCADE;
