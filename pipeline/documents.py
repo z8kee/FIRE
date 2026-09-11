@@ -1,4 +1,4 @@
-import sys, time
+import sys
 
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -6,9 +6,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from transformers import AutoTokenizer
-from ingestion.secIngestion import SECIngestor
-niche = "BAAI/bge-small-en-v1.5"
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
+tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-small-en-v1.5")
 tokenizer.model_max_length = 10**9
 
 def chunk_text(text, size=400, overlap=50):
@@ -57,36 +55,6 @@ def build_chunks(filing_data):
                     "chunk_index": i,
                     "chunk_text": chunk,
                 }
-        
-            records.append(record)
+                records.append(record)
 
     return records
-
-if __name__ == "__main__":
-    f = 0
-    while f != 2:
-        f = int(input("Enter 0 for test, 1 for user input, or 2 to exit: "))
-        if f == 0:
-            s = time.time()
-            test = SECIngestor("AAPL")
-            result = test.retrieve_filing(20)
-            records = build_chunks(result)
-            e = time.time()
-            print(records[0])
-            print(f"Number of chunks: {len(records)}")
-            print(f"Time taken: {e - s:.2f} seconds")
-        elif f == 1:
-            ticker = input("Enter a stock ticker symbol: ")
-            test = SECIngestor(ticker)
-            result = test.retrieve_filing(25)
-            records = build_chunks(result)
-            print(records[0])
-            print(f"Number of chunks: {len(records)}")
-        elif f == 2:
-            break
-        elif f == 3:
-            r = input("type whatever u want:")
-            chunks = chunk_text(r, size=10, overlap=5)
-            print(chunks)
-
-    sys.exit()

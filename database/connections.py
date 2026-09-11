@@ -1,4 +1,5 @@
 import psycopg2, dotenv, os
+from psycopg2.extras import RealDictCursor
 
 dotenv.load_dotenv()
 
@@ -11,7 +12,7 @@ class SECRepository:
             host=host,
             port=port
         )
-        self.cursor = self.connection.cursor()
+        self.cursor = self.connection.cursor(cursor_factory=RealDictCursor)
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS companies (
@@ -88,6 +89,46 @@ class SECRepository:
             )
         self.commit()
 
+    def get_chunks(self):
+        self.cursor.execute("""
+        SELECT
+            ch.chunk_id,
+            ch.document_id,
+            ch.text,
+            ch.section,
+            d.filing_type,
+            d.filing_date,
+            c.ticker
+        FROM chunks ch
+
+        JOIN documents d
+            ON ch.document_id = d.document_id
+        JOIN companies c
+            ON d.company_id = c.company_id
+        
+        ORDER BY ch.chunk_id
+        """)
+
+        return self.cursor.fetchall()
+
+    def get_specific_chunk(self, chunk_id):
+        self.cursor.execute("""
+            SELECT
+                ch.text,
+                ch.section,
+                d.filing_type,
+                d.filing_date,
+                c.ticker
+            FROM chunks ch
+            JOIN documents d
+                ON ch.document_id = d.document_id
+            JOIN companies c
+                ON d.company_id = c.company_id
+            WHERE ch.chunk_id = %s
+        """, (chunk_id,))
+
+        return self.cursor.fetchone()
+    
     def close(self):
         self.cursor.close()
         self.connection.close()

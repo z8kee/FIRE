@@ -14,9 +14,12 @@ load_dotenv()
 
 def main():
     #making secingestor objects with tickers
-    tickers = ["WMT", "COST", "HD", "CRM", "ADBE",
-                   "QCOM", "AVGO", "TXN", "AMGN", "PFE", "KO", "PEP", "MCD",
-                   "DIS", "CAT", "BA", "GS", "C"]
+    tickers = ["AAPL", "MSFT", "GOOGL", "AMZN","META", "NVDA",
+               "JPM", "ORCL", "INTC", "NFLX", "CSCO", "TSLA",
+               "MS", "V", "BLK", "PLTR", "UBER", "NBIS",
+               "AMD", "NKE", "WMT", "COST", "HD", "CRM",
+               "ADBE", "QCOM", "AVGO", "TXN", "AMGN", "PFE",
+               "KO", "PEP", "MCD", "DIS", "CAT", "BA", "GS", "C"]
     db = SECRepository(dbname='fire_rag',
                         user='fire_user', 
                         password=os.getenv("POSTGRESPASS")
@@ -68,4 +71,8 @@ if __name__ == "__main__":
     s = time.time()
     main()
     e = time.time()
-    print(f"Time taken: {round((e - s)/60, 2)} minutes")
+    time_took = round((e - s)/60, 2)
+    if time_took > 60:
+        print(f"Time taken: {round((time_took/60), 1)} hours")
+    else:
+        print(f"Time taken: {round((e - s)/60, 2)} minutes")
