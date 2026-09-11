@@ -56,15 +56,3 @@ def check_query():
 if __name__ == "__main__":
 	unittest.main()
 	check_query()
-
-"""
-refactor: update database structure and enhance query capabilities
-
-- Removed obsolete SQL scripts and added new SQL script for chunk retrieval.
-- Updated SECRepository to use RealDictCursor for better data handling.
-- Introduced methods for fetching chunks and specific chunks from the database.
-- Added new embedding and vector storage classes for improved indexing.
-- Implemented build_index script to process and index SEC filings.
-- Created unit tests for document chunking and vector indexing functionalities.
-- Added Docker configuration for Qdrant service.
-"""
