@@ -12,5 +12,5 @@ services:
 
 volumes:
   qdrant_storage:
-
+    external: true
 # docker compose up -d to start it, docker compose down to stop it

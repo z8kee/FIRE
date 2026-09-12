@@ -49,6 +49,7 @@ def main():
                 filing["accession_number"],
                 filing["filing_type"],
                 filing["filing_date"],
+                filing["acceptance_datetime"],
                 filing["source_url"]
             )
 

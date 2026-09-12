@@ -30,6 +30,7 @@ class SECRepository:
                 accession_number TEXT UNIQUE NOT NULL,
                 filing_type VARCHAR(10) NOT NULL,
                 filing_date DATE NOT NULL,
+                acceptance_datetime TIMESTAMPTZ,
                 source_url TEXT
             )
         ''')
@@ -63,13 +64,16 @@ class SECRepository:
         self.commit()
         return company_id
 
-    def insert_document(self, company_id, accession_number, filing_type, filing_date, source_url):
+    def insert_document(self, company_id, accession_number, filing_type, filing_date, acceptance_datetime, source_url):
         self.cursor.execute('''
-            INSERT INTO documents (company_id, accession_number, filing_type, filing_date, source_url)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (accession_number) DO NOTHING
+            INSERT INTO documents (company_id, accession_number, filing_type, filing_date, acceptance_datetime, source_url)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (accession_number) 
+            DO UPDATE SET
+                acceptance_datetime = EXCLUDED.acceptance_datetime
+
             RETURNING document_id
-        ''', (company_id, accession_number, filing_type, filing_date, source_url))
+        ''', (company_id, accession_number, filing_type, filing_date, acceptance_datetime, source_url))
         document_id = self.cursor.fetchone()
         if document_id is None:
             self.cursor.execute('SELECT document_id FROM documents WHERE accession_number = %s', (accession_number,))
@@ -128,7 +132,42 @@ class SECRepository:
         """, (chunk_id,))
 
         return self.cursor.fetchone()
-    
+
+    def get_docs_missing_timestamp(self):
+        self.cursor.execute("""
+            SELECT
+                d.document_id,
+                d.accession_number,
+                c.ticker
+            FROM documents d
+            JOIN companies c
+                ON d.company_id = c.company_id
+            WHERE d.acceptance_datetime IS NULL
+        """)
+
+        return self.cursor.fetchall()
+
+    def update_acceptance_datetime(self, document_id, acceptance_datetime):
+        self.cursor.execute("""
+            UPDATE documents
+            SET acceptance_datetime = %s
+            WHERE document_id = %s
+        """, (
+            acceptance_datetime,
+            document_id
+        ))
+    def get_document_timestamps(self):
+        self.cursor.execute("""
+            SELECT
+                document_id,
+                acceptance_datetime
+            FROM documents
+            WHERE acceptance_datetime IS NOT NULL
+            ORDER BY document_id       
+        """)
+
+        return self.cursor.fetchall()
+      
     def close(self):
         self.cursor.close()
         self.connection.close()

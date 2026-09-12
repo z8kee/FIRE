@@ -39,10 +39,10 @@ class VectorStorage:
                            points=points,
                            wait=True)
 
-    def search(self, query_vector, ticker, limit=15):
-        query_filter = None
+    def search(self, query_vector, ticker=None, cutoff_datetime=None, limit=15):
+        conditions = []
 
-        if ticker is not None:
+        if ticker:
             query_filter = models.Filter(
                 must=[models.FieldCondition(
                     key="ticker",
@@ -50,7 +50,42 @@ class VectorStorage:
                     )
                 ]
             )
+
+        if cutoff_datetime:
+            if hasattr(cutoff_datetime, "isoformat"):
+                cutoff_datetime = (
+                    cutoff_datetime.isoformat()
+                )
+
+            conditions.append(models.FieldCondition(
+                key="acceptance_datetime",
+                range=models.DatetimeRange(
+                    lte=cutoff_datetime
+                )
+            )
+        )
+
+        query_filter = (models.Filter(must=conditions) if conditions else None)
         return self.client.query_points(collection_name=self.collection_name,
                                         query=query_vector.tolist(),
                                         query_filter=query_filter,
                                         limit=limit).points
+
+    def update_document_timestamp(self, document_id, acceptance_datetime):
+        self.client.set_payload(
+            collection_name=self.collection_name,
+            payload={
+                "acceptance_datetime":
+                acceptance_datetime.isoformat()
+            },
+            points=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="document_id",
+                        match=models.MatchValue(
+                        value=document_id
+                        )
+                    )
+                ]
+            )
+        )

@@ -56,6 +56,7 @@ class SECIngestor:
                 "cik": self.company.cik,
                 "filing_type": filing.form,
                 "filing_date": filing.filing_date,
+                "acceptance_datetime": filing.acceptance_datetime,
                 "accession_number": filing.accession_no,
                 "source_url": filing.url,
                 "sections": {

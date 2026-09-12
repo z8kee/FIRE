@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -29,30 +30,59 @@ class VectorIndexingTests(unittest.TestCase):
 		client.query_points.assert_called_once_with(
 			collection_name="test_sec_chunks",
 			query=query_vector.tolist(),
+			query_filter=None,
 			limit=3,
 		)
 
 def check_query():
-    embedding = Embedder()
-    vector_store = VectorStorage()
-    db = SECRepository(dbname="fire_rag",
-                    user="fire_user",
-                    password=os.getenv("POSTGRESPASS"))
-    
-    query = "What risks does Microsoft face from its supply chain?"
-    query_embedding = embedding.encode([query])[0]
-    results = vector_store.search(query_embedding, ticker="MSFT", limit=10)
+	embedding = Embedder()
+	vector_store = VectorStorage()
+	db = SECRepository(dbname="fire_rag",
+					user="fire_user",
+					password=os.getenv("POSTGRESPASS"))
+	
+	query = "What risks does Microsoft face from its supply chain?"
+	query_embedding = embedding.encode([query])[0]
+	results = vector_store.search(query_embedding,
+							   ticker="MSFT",
+							   cutoff_datetime="2022-12-31",
+							   limit=10)
 
-    for result in results:
-        chunk = db.get_specific_chunk(result.payload["chunk_id"])
+	for result in results:
+		chunk = db.get_specific_chunk(result.payload["chunk_id"])
 
-        print(result.score)
-        print("Ticker", chunk["ticker"])
-        print("Date", chunk["filing_date"])
-        print("Section:", chunk["section"])
-        print()
-        print(chunk["text"])
+		print("=========================")
+		print(result.score)
+		print("Ticker", chunk["ticker"])
+		print("Date", chunk["filing_date"])
+		print("Section:", chunk["section"])
+		print()
+		print(chunk["text"])
 
+
+	cutoff = datetime(
+		2022, 12, 31,
+		23, 59, 59,
+		tzinfo=timezone.utc
+	)
+
+	results = vector_store.search(
+		query_embedding,
+		ticker="MSFT",
+		cutoff_datetime=cutoff,
+		limit=20
+	)
+
+	for result in results:
+		result_date = datetime.fromisoformat(
+			result.payload[
+				"acceptance_datetime"
+			]
+		)
+
+		assert result_date <= cutoff
+
+		
 if __name__ == "__main__":
-	unittest.main()
+	# unittest.main()
 	check_query()
