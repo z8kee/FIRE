@@ -31,6 +31,11 @@ class VectorStorage:
                         "ticker": row["ticker"],
                         "filing_type": row["filing_type"],
                         "filing_date": str(row["filing_date"]),
+                        "acceptance_datetime": (
+                            row["acceptance_datetime"].isoformat()
+                            if row.get("acceptance_datetime") is not None
+                            else None
+                        ),
                         "section": row["section"]
                 }
             )
@@ -43,12 +48,10 @@ class VectorStorage:
         conditions = []
 
         if ticker:
-            query_filter = models.Filter(
-                must=[models.FieldCondition(
-                    key="ticker",
-                    match=models.MatchValue(value=ticker.upper())
-                    )
-                ]
+            conditions.append(models.FieldCondition(
+                key="ticker",
+                match=models.MatchValue(value=ticker.upper())
+            )
             )
 
         if cutoff_datetime:
@@ -65,7 +68,7 @@ class VectorStorage:
             )
         )
 
-        query_filter = (models.Filter(must=conditions) if conditions else None)
+        query_filter = models.Filter(must=conditions) if conditions else None
         return self.client.query_points(collection_name=self.collection_name,
                                         query=query_vector.tolist(),
                                         query_filter=query_filter,

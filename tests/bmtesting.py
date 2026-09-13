@@ -19,7 +19,6 @@ def main():
 	parser.add_argument("--limit", type=int, default=15, help="Maximum results to display")
 	parser.add_argument("--sample", action="store_true", help="Run against built-in sample chunks")
 	args = parser.parse_args()
-
 	repository = None
 	if args.sample:
 		ticker = args.ticker or "ABC"
@@ -39,7 +38,7 @@ def main():
 			print("No chunks found in the database.")
 			return
 		ticker = args.ticker
-
+    
 	results = BMRetrieving(rows).search(args.query, ticker=ticker, limit=args.limit)
 	chunks_by_id = {row["chunk_id"]: row for row in rows}
 

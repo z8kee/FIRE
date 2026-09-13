@@ -1,0 +1,152 @@
+[
+  {
+    "query": "What supply chain risks did Microsoft identify?",
+    "ticker": "MSFT",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What risks did Apple identify around component availability?",
+    "ticker": "AAPL",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2021-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How did Microsoft describe competition in its cloud business?",
+    "ticker": "MSFT",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What cybersecurity threats could affect Microsoft's operations?",
+    "ticker": "MSFT",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What factors affected Apple's ability to produce products?",
+    "ticker": "AAPL",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How dependent was Apple on third-party manufacturers?",
+    "ticker": "AAPL",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2020-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What risks did Amazon identify related to its fulfillment network?",
+    "ticker": "AMZN",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How did Amazon describe risks from changing consumer spending?",
+    "ticker": "AMZN",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2021-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What regulatory issues did Alphabet face?",
+    "ticker": "GOOGL",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What risks did Alphabet identify for its advertising revenue?",
+    "ticker": "GOOGL",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How could rising interest rates affect Tesla?",
+    "ticker": "TSLA",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What battery supply risks did Tesla discuss?",
+    "ticker": "TSLA",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What factors could reduce Nvidia's demand for products?",
+    "ticker": "NVDA",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What manufacturing constraints did Nvidia identify?",
+    "ticker": "NVDA",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How did Walmart describe inflation-related risks?",
+    "ticker": "WMT",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-01-31T23:59:59+00:00"
+  },
+  {
+    "query": "What labor risks did Walmart discuss?",
+    "ticker": "WMT",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-01-31T23:59:59+00:00"
+  },
+  {
+    "query": "What risks did JPMorgan identify from credit losses?",
+    "ticker": "JPM",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How could market conditions affect JPMorgan's results?",
+    "ticker": "JPM",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2021-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What clinical trial risks did Pfizer discuss?",
+    "ticker": "PFE",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What patent challenges could affect Pfizer's products?",
+    "ticker": "PFE",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2021-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What risks did Coca-Cola identify related to changing consumer preferences?",
+    "ticker": "KO",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How could foreign exchange changes affect Coca-Cola?",
+    "ticker": "KO",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What supply constraints did Ford identify?",
+    "ticker": "F",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "What risks could affect Ford's electric vehicle strategy?",
+    "ticker": "F",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2023-12-31T23:59:59+00:00"
+  },
+  {
+    "query": "How did Netflix describe competition for streaming subscribers?",
+    "ticker": "NFLX",
+    "relevant_chunk_ids": [],
+    "cutoff_datetime": "2022-12-31T23:59:59+00:00"
+  }
+]

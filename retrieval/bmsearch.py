@@ -11,7 +11,7 @@ class BMRetrieving:
         self.rows = rows
         self.tokenised_corpus = [tokenise(row["text"]) for row in rows]
         self.index = BM25Okapi(self.tokenised_corpus)
-        
+
     #tokenises query to find similarites to tokenised chunks
     def search(self, query, ticker=None, cutoff_datetime=None, limit=15):
         query_tokens = tokenise(query)
@@ -24,7 +24,8 @@ class BMRetrieving:
                     continue
 
             if cutoff_datetime is not None:
-                if row["acceptance_datetime"] > cutoff_datetime:
+                acceptance_datetime = row.get("acceptance_datetime")
+                if acceptance_datetime is not None and acceptance_datetime > cutoff_datetime:
                     continue
 
             results.append({
@@ -33,5 +34,21 @@ class BMRetrieving:
                 "source": "bm25"
             })
 
-        results.sort(key=lambda x: x["score"], reverse=True)
-        return results[:limit]
+        return sorted(results, key=lambda x: x["score"], reverse=True)[:limit]
+
+    #fusing bm25 and qdrant vector search
+    #since they're both on different scales we will use rrf, the higher the rank
+    #the higher the points recieved
+
+    def reciprocal_rank_fusion(vector_res, bm25_res, k=60, limit=15):
+        scores = {}
+
+        for rank, result in enumerate(vector_res, start=1):
+            chunk_id = result.payload["chunk_id"]
+            scores[chunk_id] = (scores.get(chunk_id, 0) + 1/(k+rank))
+
+        for rank, result in enumerate(bm25_res, start=1):
+            chunk_id = result["chunk_id"]
+            scores[chunk_id] = (scores.get(chunk_id, 0) +1/(k+rank))
+
+        return sorted(scores.items(), key=lambda x: x[1], reverse=True)[:limit]

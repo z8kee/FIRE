@@ -12,7 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
 
 from retrieval.indexvector import VectorStorage
-from scripts.build_indexndex import *
+from scripts.build_index import *
 
 class VectorIndexingTests(unittest.TestCase):
 	@patch("retrieval.indexvector.QdrantClient")
