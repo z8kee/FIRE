@@ -102,6 +102,7 @@ class SECRepository:
             ch.section,
             d.filing_type,
             d.filing_date,
+            d.acceptance_datetime,
             c.ticker
         FROM chunks ch
 
