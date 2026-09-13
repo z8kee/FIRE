@@ -1,4 +1,5 @@
 import os, sys, time
+
 from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -20,11 +21,11 @@ def main():
                "AMD", "NKE", "WMT", "COST", "HD", "CRM",
                "ADBE", "QCOM", "AVGO", "TXN", "AMGN", "PFE",
                "KO", "PEP", "MCD", "DIS", "CAT", "BA", "GS", "C"]
+    
     db = SECRepository(dbname='fire_rag',
                         user='fire_user', 
                         password=os.getenv("POSTGRESPASS")
                         )
-    #already did aapl for testing
     for ticker in tickers:
         #if ticker doesnt exist
         print(f"Retrieving filings for {ticker}")

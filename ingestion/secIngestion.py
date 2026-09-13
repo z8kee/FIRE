@@ -7,6 +7,21 @@ class SECIngestor:
         '''Initialize the sec ingestor with a stock ticker symbol.'''
         self.ticker = ticker.upper()
         self.company = et.Company(self.ticker)
+        self.ten_k_sections = {
+            "business": "Item 1",
+            "risk_factors": "Item 1A",
+            "cybersecurity": "Item 1C",
+            "legal_proceedings": "Item 3",
+            "mda": "Item 7",
+            "market_risk": "Item 7A",
+        }
+        self.ten_q_sections = {
+            "mda": ("Part I", "Item 2"),
+            "market_risk": ("Part I", "Item 3"),
+            "legal_proceedings": ("Part II", "Item 1"),
+            "risk_factors": ("Part II", "Item 1A"),
+            "other_information": ("Part II", "Item 5"),
+        }
 
     def _get_filings(self, forms=["10-K", "10-Q"], limit=35):
         filings = self.company.get_filings(form=forms, amendments=False)
@@ -23,6 +38,28 @@ class SECIngestor:
         ]
 
         return "\n".join(lines)
+
+    def _extract_sections(self, filing_obj, types):
+        sections = {}
+        if types == "10-K":
+            for section_name, item in self.ten_k_sections.items():
+                try:
+                    text = filing_obj[item]
+                except Exception:
+                    text = None
+
+                sections[section_name] = self._clean_section(text)
+
+        elif types == "10-Q":
+            for section_name, (part, item) in self.ten_q_sections.items():
+                try:
+                    text = filing_obj.get_item_with_part(part, item)
+                except Exception:
+                    text = None
+    
+                sections[section_name] = self._clean_section(text)
+
+        return sections
 
     def retrieve_filing(self, limit=35):
         filings = self._get_filings(limit=limit)
@@ -42,30 +79,24 @@ class SECIngestor:
                 filing_obj = filing.obj()
 
                 if filing.form == "10-Q":
-                    mda = filing_obj.get_item_with_part("Part I", "Item 2")
-                    risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
+                    sections = self._extract_sections(filing_obj, "10-Q")
                 elif filing.form == "10-K":
-                    mda = filing_obj.get_item_with_part("Part II", "Item 7")
-                    risk_factors = filing_obj.get_item_with_part("Part II", "Item 1A")
+                    sections = self._extract_sections(filing_obj, "10-K") 
                 else:
                     continue
 
                 results.append({
-                "ticker": self.ticker,
-                "company_name": self.company.name,
-                "cik": self.company.cik,
-                "filing_type": filing.form,
-                "filing_date": filing.filing_date,
-                "acceptance_datetime": filing.acceptance_datetime,
-                "accession_number": filing.accession_no,
-                "source_url": filing.url,
-                "sections": {
-                    "mda": self._clean_section(mda),
-                    "risk_factors": self._clean_section(
-                        risk_factors
-                    ),
-                },
-            })
+                    "ticker": self.ticker,
+                    "company_name": self.company.name,
+                    "cik": self.company.cik,
+                    "filing_type": filing.form,
+                    "filing_date": filing.filing_date,
+                    "acceptance_datetime": filing.acceptance_datetime,
+                    "accession_number": filing.accession_no,
+                    "source_url": filing.url,
+                    "sections": sections
+                    }
+                )
             except Exception as e:
                 print(
                     f"Skipping {filing.accession_no}: "
