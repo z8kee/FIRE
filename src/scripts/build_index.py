@@ -1,7 +1,7 @@
 import os, time, sys
 
 from pathlib import Path
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -31,12 +31,16 @@ def build():
 
         embeddings = embedding.encode(texts)
         vector_store.insert_chunks(batch, embeddings)
-
-        print(F"Indexed {min(s+batch_size, len(rows))}/{len(rows)}")
+        n = len(rows)
+        curr = min(s+batch_size, len(rows))
+        print(F"Indexed {curr}/{n}, you are {round((curr/n)*100, 5)} done")
 
     db.close()
 
     print("Finito!")
 
 if __name__ == "__main__":
+    s = time.time()
     build()
+    e = time.time()
+    print(f"Time taken: {round((e-s)/60, 2)} minutes")

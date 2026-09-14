@@ -58,9 +58,9 @@ class SECRepository:
         company_id = self.cursor.fetchone()
         if company_id is None:
             self.cursor.execute('SELECT company_id FROM companies WHERE ticker = %s', (ticker,))
-            company_id = self.cursor.fetchone()[0]
+            company_id = self.cursor.fetchone()["company_id"]
         else:
-            company_id = company_id[0]
+            company_id = company_id["company_id"]
         self.commit()
         return company_id
 
@@ -77,9 +77,9 @@ class SECRepository:
         document_id = self.cursor.fetchone()
         if document_id is None:
             self.cursor.execute('SELECT document_id FROM documents WHERE accession_number = %s', (accession_number,))
-            document_id = self.cursor.fetchone()[0]
+            document_id = self.cursor.fetchone()["document_id"]
         else:
-            document_id = document_id[0]
+            document_id = document_id["document_id"]
         self.commit()
         return document_id
 
@@ -168,7 +168,16 @@ class SECRepository:
         """)
 
         return self.cursor.fetchall()
-      
+
+    def get_tickers(self):
+        self.cursor.execute("""
+            SELECT ticker
+            FROM COMPANIES
+            ORDER BY ticker
+        """)
+
+        return [row["ticker"] for row in self.cursor.fetchall()]
+    
     def close(self):
         self.cursor.close()
         self.connection.close()

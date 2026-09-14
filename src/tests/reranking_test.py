@@ -5,10 +5,12 @@ from types import SimpleNamespace
 
 import argparse
 import dotenv
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
 
-dotenv.load_dotenv()
+dotenv.load_dotenv(PROJECT_ROOT / ".env")
 
 from database.connections import SECRepository
 from retrieval.embeddings import Embedder
@@ -107,7 +109,7 @@ def run_hybrid_search(query, ticker, cutoff_datetime):
 
 if __name__ == "__main__":
     run_hybrid_search(
-        "How did Netflix describe competition for streaming subscribers?",
+        "How much did Netflix earn?",
         "NFLX",
         datetime(2022, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
         )
