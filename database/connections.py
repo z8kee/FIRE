@@ -177,7 +177,14 @@ class SECRepository:
         """)
 
         return [row["ticker"] for row in self.cursor.fetchall()]
-    
+
+    def get_companies(self):
+        self.cursor.execute("""
+        SELECT ticker, name
+        FROM companies
+        """)
+        return self.cursor.fetchall()
+        
     def close(self):
         self.cursor.close()
         self.connection.close()

@@ -47,26 +47,35 @@ class VectorStorage:
     def search(self, query_vector, ticker=None, cutoff_datetime=None, limit=15):
         conditions = []
 
-        if ticker:
-            conditions.append(models.FieldCondition(
-                key="ticker",
-                match=models.MatchValue(value=ticker.upper())
-            )
-            )
+        if ticker is not None:
+            if isinstance(ticker, str):
+                tickers = [ticker]
+            else:
+                tickers = [str(item) for item in ticker]
+
+            if tickers:
+                upper_tickers = [item.upper() for item in tickers if item]
+                if len(upper_tickers) == 1:
+                    conditions.append(models.FieldCondition(
+                        key="ticker",
+                        match=models.MatchValue(value=upper_tickers[0])
+                    ))
+                else:
+                    conditions.append(models.FieldCondition(
+                        key="ticker",
+                        match=models.MatchAny(any=upper_tickers)
+                    ))
 
         if cutoff_datetime:
             if hasattr(cutoff_datetime, "isoformat"):
-                cutoff_datetime = (
-                    cutoff_datetime.isoformat()
-                )
+                cutoff_datetime = cutoff_datetime.isoformat()
 
             conditions.append(models.FieldCondition(
                 key="acceptance_datetime",
                 range=models.DatetimeRange(
                     lte=cutoff_datetime
                 )
-            )
-        )
+            ))
 
         query_filter = models.Filter(must=conditions) if conditions else None
         return self.client.query_points(collection_name=self.collection_name,

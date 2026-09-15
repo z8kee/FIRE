@@ -1,54 +1,98 @@
-import json
-from ollama import chat
+import re
+from rapidfuzz import fuzz
+import dateparser
 
-class QueryParsing:
-    def __init__(self,model="qwen2.5:3b-instruct"):
-        self.model = model
-    
-    def parse(self, query, available_tickers):
-        prompt = f"""
-        You extract retrieval parameters from financial research queries.
+class QueryParser:
+    def __init__(self, companies):
+        self.companies = self._normalise_companies(companies)
+        self.company_suffixes = {
+            "inc", "incorporated", "corp", "corporation",
+            "ltd", "limited", "plc", "holdings"}
 
-        Available tickers:
-        {", ".join(available_tickers)}
+    def _normalise_companies(self, companies):
+        normalised = []
 
-        Return ONLY valid JSON in this exact format:
+        for company in companies:
+            if isinstance(company, dict):
+                if "ticker" in company and "name" in company:
+                    normalised.append(company)
+            elif isinstance(company, str):
+                normalised.append({"ticker": company, "name": company})
 
-        {{
-            "tickers": [],
-            "cutoff_datetime": null
-        }}
+        return normalised
 
-        Rules:
-        - Identify only companies explicitly referred to by the user.
-        - Convert company names to their ticker.
-        - Do NOT add related companies that were not requested.
-        - Every ticker must come from the available ticker list.
-        - If multiple companies are explicitly mentioned, return all of them.
-        - If no company is identifiable, return [].
-        - If the query specifies an "as of", "before", "by", or equivalent historical cutoff,
-        convert it to ISO-8601 UTC.
-        - A date without a specified time should use 23:59:59 UTC.
-        - If there is no historical cutoff, return null.
-        - Do not answer the user's question.
-        - Do not provide explanations.
+    def normalise_name(self, name):
+        name = re.sub(r"[^\w\s]", " ", name.lower())
+        words = [word for word in name.split() if word not in self.company_suffixes]
 
-        Query:
-        {query}
-        """
+        return " ".join(words)
 
-        response = chat(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            options={"temperature": 0}
+    def resolve_tickers(self, query):
+        query = self.normalise_name(query)
+        query_tokens = set(query.split())
+        matches = []
+        for company in self.companies:
+            ticker = company["ticker"]
+            company_name = self.normalise_name(company["name"])
+            company_tokens = set(company_name.split())
+
+            if re.search(rf"\b{re.escape(ticker.lower())}\b", query.lower()):
+                matches.append(ticker)
+                continue
+
+            if company_name in query:
+                matches.append(ticker)
+                continue
+
+            overlap = len(query_tokens & company_tokens)
+            token_ratio = overlap / max(1, len(company_tokens))
+
+            # dynamic threshold
+            threshold = 0.6 if len(query_tokens) <= 3 else 0.45
+
+            if token_ratio >= threshold:
+                matches.append(ticker)
+                continue
+
+            score = fuzz.partial_ratio(company_name, query)
+            if score >= 75:
+                matches.append(ticker)
+
+        return list(dict.fromkeys(matches))
+
+    def extract_datetime(self, query):
+        pattern = (
+            r"\b(?:as of|as at|before|after|by|through|up to|prior to|around|"
+            r"in|for|during|since|until|at|on|around)"
+            r"\s+(.+?)(?:\?|$)"
         )
 
-        before = json.loads(response.message.content)
+        match = re.search(pattern, query, flags=re.IGNORECASE)
+        # print(f"match whole : {match.group(0).strip()}")
+        # print(f"match 1st: {match.group(1).strip()}")
+        if not match: return None
 
-        tickers = before.get("tickers", [])
-        tickers = [ticker for ticker in tickers if ticker in available_tickers]
-        cutoff = before.get("cutoff_datetime")
+        date_text = match.group(1).strip()
 
-        return {"tickers": tickers,
-                "cutoff_datetime": cutoff
+        if re.fullmatch(r"\d{4}", date_text):
+            parsed = dateparser.parse(f"Dec 31 {date_text}", settings={
+                "TIMEZONE": "UTC",
+                "RETURN_AS_TIMEZONE_AWARE": True
+            })
+        else:
+            parsed = dateparser.parse(date_text, settings={
+                "TIMEZONE": "UTC",
+                "RETURN_AS_TIMEZONE_AWARE": True
+            })
+            
+        if parsed is None: return None
+    
+        return parsed.replace(hour=23, minute=59, second=59, microsecond=0)
+
+
+    def parse(self, query):
+        return {"raw_query": query,
+                "tickers": self.resolve_tickers(query),
+                "cutoff_datetime":self.extract_datetime(query)
         }
+

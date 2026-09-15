@@ -7,11 +7,15 @@ from datetime import datetime, timezone
 
 import numpy as np
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-	sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SRC_ROOT = PROJECT_ROOT / "src"
+
+for path in (PROJECT_ROOT, SRC_ROOT):
+	if str(path) not in sys.path:
+		sys.path.insert(0, str(path))
 
 from retrieval.indexvector import VectorStorage
+from retrieval.query_parser import QueryParser
 from scripts.build_index import *
 
 class VectorIndexingTests(unittest.TestCase):
@@ -40,12 +44,14 @@ def check_query():
 	db = SECRepository(dbname="fire_rag",
 					user="fire_user",
 					password=os.getenv("POSTGRESPASS"))
-	
-	query = "What risks does Microsoft face from its supply chain?"
+	parsing = QueryParser(db.get_companies())
+
+	query = "What was microsoft's revenue in 2023?"
+	parsed = parsing.parse(query)
 	query_embedding = embedding.encode([query])[0]
 	results = vector_store.search(query_embedding,
-							   ticker="MSFT",
-							   cutoff_datetime="2022-12-31",
+							   ticker=parsed['tickers'],
+							   cutoff_datetime=parsed["cutoff_datetime"],
 							   limit=10)
 
 	for result in results:
