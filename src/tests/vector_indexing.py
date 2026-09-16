@@ -46,7 +46,7 @@ def check_query():
 					password=os.getenv("POSTGRESPASS"))
 	parsing = QueryParser(db.get_companies())
 
-	query = "What was microsoft's revenue in 2023?"
+	query = "what risks did citi group face back in 2024?"
 	parsed = parsing.parse(query)
 	query_embedding = embedding.encode([query])[0]
 	results = vector_store.search(query_embedding,

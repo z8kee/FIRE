@@ -18,9 +18,16 @@ class BMRetrieving:
         scores = self.index.get_scores(query_tokens)
         results = []
 
+        allowed_tickers = None
+        if ticker is not None:
+            if isinstance(ticker, str):
+                allowed_tickers = {ticker.upper()}
+            else:
+                allowed_tickers = {str(item).upper() for item in ticker if item}
+
         for row, score in zip(self.rows, scores):
-            if ticker is not None:
-                if row["ticker"] != ticker.upper():
+            if allowed_tickers is not None:
+                if row["ticker"].upper() not in allowed_tickers:
                     continue
 
             if cutoff_datetime is not None:
@@ -40,6 +47,7 @@ class BMRetrieving:
     #since they're both on different scales we will use rrf, the higher the rank
     #the higher the points recieved
 
+    @staticmethod
     def reciprocal_rank_fusion(vector_res, bm25_res, k=60, limit=15):
         scores = {}
 

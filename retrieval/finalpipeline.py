@@ -18,14 +18,14 @@ class RetrievalPipeline:
 
         vector_results = self.vector_store.search(
             query_vector,
-            tickers=tickers,
+            ticker=tickers,
             cutoff_datetime=cutoff,
             limit=30
         )
 
         bm25_results = self.bm25.search(
             query,
-            tickers=tickers,
+            ticker=tickers,
             cutoff_datetime=cutoff,
             limit=30
         )
@@ -51,13 +51,13 @@ class RetrievalPipeline:
                 "hybrid_score": hybrid_score
             })
 
-            final_results = self.reranker.rerank(query,
-                                                 candidates,
-                                                 limit=final_limit
-            )
+        final_results = self.reranker.rerank(query,
+                                                candidates,
+                                                limit=final_limit
+        )
 
-            return {"query": query,
-                    "tickers": tickers,
-                    "cutoff_datetime": cutoff,
-                    "results": final_results}
+        return {"query": query,
+                "tickers": tickers,
+                "cutoff_datetime": cutoff,
+                "results": final_results}
 

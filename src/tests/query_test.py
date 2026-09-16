@@ -16,7 +16,7 @@ def main():
 	parser.add_argument(
 		"query",
 		nargs="?",
-		default="What was microsoft's revenue in 2023?",
+		default="How much did Netflix earn in 2023?",
 	)
 	parser.add_argument("--model", default="qwen2.5:3b")
 	args = parser.parse_args()
