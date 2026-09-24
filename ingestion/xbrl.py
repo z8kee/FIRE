@@ -126,4 +126,4 @@ class XBRLIngestor:
 
         return pd.DataFrame(rows)
 
-    
+    a
