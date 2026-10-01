@@ -23,6 +23,9 @@ class FinancialFeatureBuilder:
         df["ocf_margin"] = self.divide(df["operating_cash_flow"], df["revenue"])
         df["fcf_margin"] = self.divide(df["free_cash_flow"], df["revenue"])
 
+        df["debt_to_assets"] = self.divide(df["total_debt"],df["total_assets"])
+        df["cash_to_debt"] = self.divide(df["cash"],df["total_debt"])
+        df["fcf_to_debt"] = self.divide(df["free_cash_flow"],df["total_debt"])
 
         grouped = df.groupby("ticker")
 

@@ -86,22 +86,25 @@ def main():
     quarterly = xbrl.build_quarterly_observations(df)
     quarterly = xbrl.derive_quarterly_cash_metrics(quarterly)
     quarterly = xbrl.derive_q4_metrics(quarterly)
+    quarterly = xbrl.derive_total_debt(quarterly)
     features = builder.build(quarterly)
+
     print(
         features[
             [
                 "fiscal_year",
                 "fiscal_quarter",
-                "current_ratio",
-                "operating_margin",
-                "net_margin",
-                "ocf_margin",
-                "fcf_margin",
-                "cash_to_assets",
-                "revenue_growth_yoy",
-                "net_income_change_yoy"
+                "total_debt",
+                "debt_to_assets",
+                "cash_to_debt",
+                "fcf_to_debt"
             ]
-        ].tail(12)
+        ].tail(16)
+    )
+
+    print(
+        quarterly.groupby("fiscal_year")["total_debt"]
+        .apply(lambda x: x.isna().mean() * 100)
     )
 if __name__ == "__main__":
     main()

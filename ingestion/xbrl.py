@@ -4,8 +4,8 @@ class XBRLIngestor:
     def __init__(self, ticker: str):
         et.set_identity(os.getenv("EDGAR_IDENTITY"))
         self.ticker = ticker.upper()
-        company = et.Company(self.ticker)
-        self.cik = int(company.cik)
+        self.company = et.Company(self.ticker)
+        self.cik = int(self.company.cik)
 
         self.headers = {
             "User-Agent": os.getenv("EDGAR_IDENTITY")
@@ -95,22 +95,21 @@ class XBRLIngestor:
             "capex"
         }
 
+        self.debt_metrics = {
+            "debt_current",
+            "short_term_borrowings",
+            "long_term_debt_current",
+            "long_term_debt_noncurrent",
+            "long_term_debt_total"
+        }
+
     def get_company_facts(self):
         cik = str(self.cik).zfill(10)
 
-        url = (
-            "https://data.sec.gov/api/xbrl/"
-            f"companyfacts/CIK{cik}.json"
-        )
+        url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 
-        response = requests.get(
-            url,
-            headers=self.headers,
-            timeout=30
-        )
-
+        response = requests.get(url, headers=self.headers,timeout=30)
         response.raise_for_status()
-
         return response.json()
 
     def get_concept(self, concept, unit="USD"):
@@ -168,11 +167,7 @@ class XBRLIngestor:
 
     def get_fiscal_quarter(self, form, fp):
         if form == "10-Q":
-            mapping = {
-                "Q1": 1,
-                "Q2": 2,
-                "Q3": 3,
-            }
+            mapping = {"Q1": 1, "Q2": 2, "Q3": 3,}
             return mapping.get(fp)
 
         if form == "10-K":
@@ -183,15 +178,8 @@ class XBRLIngestor:
     def build_quarterly_observations(self, df):
         df = df.copy()
 
-        df["start"] = pd.to_datetime(
-            df["start"],
-            errors="coerce"
-        )
-
-        df["end"] = pd.to_datetime(
-            df["end"],
-            errors="coerce"
-        )
+        df["start"] = pd.to_datetime(df["start"], errors="coerce")
+        df["end"] = pd.to_datetime(df["end"], errors="coerce")
 
         df["fiscal_quarter"] = df.apply(
             lambda row: self.get_fiscal_quarter(
@@ -201,18 +189,14 @@ class XBRLIngestor:
             axis=1
         )
 
-        df = df[
-            df["fiscal_quarter"].notna()
-        ]
+        df = df[df["fiscal_quarter"].notna()]
 
         observations = []
 
         for accession, filing in df.groupby(
             "accession_number"
         ):
-            quarter = int(
-                filing["fiscal_quarter"].iloc[0]
-            )
+            quarter = int(filing["fiscal_quarter"].iloc[0])
 
             # Latest period represented by this filing
             current_end = filing["end"].max()
@@ -322,6 +306,24 @@ class XBRLIngestor:
                 else:
                     row[f"{metric}_cumulative"] = None
 
+            for metric in self.debt_metrics:
+                candidates = filing[
+                    (filing["metric"] == metric)
+                    & (filing["end"] == current_end)
+                ].copy()
+
+                if not candidates.empty:
+                    candidates = candidates.sort_values(
+                        "concept_priority"
+                    )
+
+                    row[metric] = (
+                        candidates.iloc[0]["value"]
+                    )
+
+                else:
+                    row[metric] = None
+
             observations.append(row)
 
         result = pd.DataFrame(observations)
@@ -329,6 +331,70 @@ class XBRLIngestor:
         return result.sort_values(
             ["fiscal_year", "fiscal_quarter"]
         )
+
+    def derive_total_debt(self, df):
+        df = df.copy()
+
+        def calculate_debt(row):
+            debt_current = row["debt_current"]
+            short_term = row["short_term_borrowings"]
+            lt_current = row["long_term_debt_current"]
+            lt_noncurrent = row["long_term_debt_noncurrent"]
+            lt_total = row["long_term_debt_total"]
+
+            if (pd.notna(debt_current) and pd.notna(lt_noncurrent)):
+                return pd.Series({
+                    "total_debt":
+                        debt_current + lt_noncurrent,
+
+                    "debt_method":
+                        "debt_current + lt_noncurrent"
+                })
+
+            if (pd.notna(short_term) and pd.notna(lt_current) and pd.notna(lt_noncurrent)):
+                return pd.Series({
+                    "total_debt":
+                        short_term
+                        + lt_current
+                        + lt_noncurrent,
+
+                    "debt_method":
+                        "short_term + lt_current + lt_noncurrent"
+                })
+
+            # Some companies don't report separate
+            # short-term borrowings.
+            if (pd.notna(lt_current)and pd.notna(lt_noncurrent)):
+
+                return pd.Series({
+                    "total_debt":
+                        lt_current + lt_noncurrent,
+
+                    "debt_method":
+                        "lt_current + lt_noncurrent"
+                })
+
+            # Fallback when long-term debt is supplied
+            # as one aggregate value.
+            if (pd.notna(lt_total) and pd.notna(short_term)):
+                return pd.Series({
+                    "total_debt":
+                        lt_total + short_term,
+
+                    "debt_method":
+                        "lt_total + short_term"
+                })
+
+            # Don't pretend missing debt == zero
+            return pd.Series({
+                "total_debt": None,
+                "debt_method": "missing"
+            })
+
+        debt = df.apply(calculate_debt, axis=1)
+
+        df[["total_debt", "debt_method"]] = debt
+        return df
 
     def classify_period(self, row):
             if pd.isna(row["start"]):
@@ -422,5 +488,17 @@ class XBRLIngestor:
                 df.loc[q4_idx, metric] = (
                     annual - first_three.sum()
                 )
+
+        return df
+
+    def get_acceptance_datetime(self):
+        filings = self.company.get_filings(form=["10-K", "10-Q"], amendments=False, trigger_full_load=True)
+
+        return {filing.accession_no: filing.acceptance_datetime for filing in filings}
+
+    def add_acceptance_datetime(self, df):
+        df = df.copy()
+        acceptance_dict = self.get_acceptance_datetime()
+        df["acceptance_datetime"] = df["accession_number"].map(acceptance_dict)
 
         return df
