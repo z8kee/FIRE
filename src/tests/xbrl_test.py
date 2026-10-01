@@ -49,36 +49,53 @@ def main():
         df["end"] - df["start"]
     ).dt.days
 
-    def classify_period(row):
-        if pd.isna(row["start"]):
-            return "instant"
-
-        days = row["duration_days"]
-
-        if 70 <= days <= 110:
-            return "quarter"
-
-        if 150 <= days <= 210:
-            return "ytd_6m"
-
-        if 240 <= days <= 300:
-            return "ytd_9m"
-
-        if 330 <= days <= 400:
-            return "annual"
-
-        return "other"
 
     df["period_type"] = df.apply(
-        classify_period,
+        xbrl.classify_period,
         axis=1,
     )
 
-    print(
-        df[df["metric"] == "revenue"][
-            ["start", "end", "duration_days", "period_type", "value", "form", "fp", "frame",]
-        ].tail(50)
-    )
+    # print(
+    #     df[df["metric"] == "revenue"][
+    #         ["start", "end", "duration_days", "period_type", "value", "form", "fp", "frame",]
+    #     ].tail(50)
+    # )
 
+    # quarter = xbrl.build_quarterly_observations(df)
+    # print(
+    #     quarter[
+    #         [
+    #             "fiscal_year",
+    #             "fiscal_quarter",
+    #             "revenue",
+    #             "net_income",
+    #             "operating_income",
+    #             "current_assets",
+    #             "current_liabilities",
+    #             "total_assets",
+    #             "equity",
+    #             "cash"
+    #         ]
+    #     ].tail(12)
+    # )
+
+    # print(df[df["form"]=="10-K"][["fy", "fp", "accession_number"]].drop_duplicates().tail(10))
+
+    quarterly = xbrl.build_quarterly_observations(df)
+    quarterly = xbrl.derive_quarterly_cash_metrics(quarterly)
+    quarterly = xbrl.derive_q4_metrics(quarterly)
+    print(
+        quarterly[
+            [
+                "fiscal_year",
+                "fiscal_quarter",
+                "revenue",
+                "operating_cash_flow_cumulative",
+                "operating_cash_flow",
+                "capex_cumulative",
+                "capex"
+            ]
+        ].tail(16)
+    )
 if __name__ == "__main__":
     main()

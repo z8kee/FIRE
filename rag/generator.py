@@ -14,17 +14,19 @@ class Generator:
         Rules:
         - Do not use outside knowledge.
         - Every factual claim must be supported by the supplied evidence.
-        - Cite evidence using its ID, for example 'Company X has done this [1] with 14% of risk [2].
-        - Never invent citation IDs.
+        - Put a citation marker such as [1] directly in the answer text after every factual claim or sentence.
+        - Use only the evidence IDs shown at the start of evidence blocks. Never invent citation IDs.
+        - The citations array is a list of the IDs used in the answer; it does not replace inline citation markers.
         - If the evidence is insufficient to answer the question, say so.
+        - MUST ALWAYS include metrics if given or interpreted.
         - Do not claim information that became available after the user's cutoff date.
-        - Be concise and factual.
+        - Be slightly concise and factual.
 
         Return ONLY valid JSON with this structure:
 
         {
-            "answer": "your answer",
-            "citations": [1, 2],
+            "answer": "Company X reported a 14% increase [1].",
+            "citations": [1],
             "insufficient_evidence": false
         }
         """
@@ -51,7 +53,7 @@ class Generator:
                         ],
                         options={
                             "temperature": 0.18,
-                            "num_predict": 350
+                            "num_predict": 550
                         },
                         format="json",
                         keep_alive="15m"

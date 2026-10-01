@@ -34,7 +34,7 @@ def main():
 
     try:
         retrieval = RetrievalPipeline(db, parser, embedder, vector_store, bm25, reranker)
-        bigraga = RAGPipeline(retrieval, Generator(model="qwen2.5:1.5b"))
+        bigraga = RAGPipeline(retrieval, Generator(model="qwen2.5:3b"))
         f = '0'
         while f != '1':
             f = input("enter question: ")
@@ -42,8 +42,8 @@ def main():
                 break
             answer = bigraga.ask(f)
 
-            print(answer["answer"])
-            print(answer["citations"])
+            print("Answer: ", answer["answer"])
+            print("Citations: ", answer["citations"])
 
     finally:
         db.close()
