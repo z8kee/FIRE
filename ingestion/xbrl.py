@@ -54,6 +54,26 @@ class XBRLIngestor:
             "capex": [
                 "PaymentsToAcquirePropertyPlantAndEquipment",
             ],
+            "debt_current": [
+                "DebtCurrent",
+            ],
+
+            "short_term_borrowings": [
+                "ShortTermBorrowings",
+                "CommercialPaper",
+            ],
+
+            "long_term_debt_current": [
+                "LongTermDebtCurrent",
+            ],
+
+            "long_term_debt_noncurrent": [
+                "LongTermDebtNoncurrent",
+            ],
+
+            "long_term_debt_total": [
+                "LongTermDebt",
+            ],
         }
 
         self.quarter_metrics = {

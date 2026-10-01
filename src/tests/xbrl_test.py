@@ -11,12 +11,14 @@ for path in (PROJECT_ROOT, SRC_ROOT):
         sys.path.insert(0, str(path))
 
 from ingestion.xbrl import XBRLIngestor
+from pipeline.financial_features import FinancialFeatureBuilder
 from dotenv import load_dotenv
 
 load_dotenv()
 
 def main():
     xbrl = XBRLIngestor("AAPL")
+    builder = FinancialFeatureBuilder()
     df = xbrl.get_raw_financials()
     print(f"Shape: {df.shape}")
     print(f"Columns: {df.columns}")
@@ -84,18 +86,22 @@ def main():
     quarterly = xbrl.build_quarterly_observations(df)
     quarterly = xbrl.derive_quarterly_cash_metrics(quarterly)
     quarterly = xbrl.derive_q4_metrics(quarterly)
+    features = builder.build(quarterly)
     print(
-        quarterly[
+        features[
             [
                 "fiscal_year",
                 "fiscal_quarter",
-                "revenue",
-                "operating_cash_flow_cumulative",
-                "operating_cash_flow",
-                "capex_cumulative",
-                "capex"
+                "current_ratio",
+                "operating_margin",
+                "net_margin",
+                "ocf_margin",
+                "fcf_margin",
+                "cash_to_assets",
+                "revenue_growth_yoy",
+                "net_income_change_yoy"
             ]
-        ].tail(16)
+        ].tail(12)
     )
 if __name__ == "__main__":
     main()
